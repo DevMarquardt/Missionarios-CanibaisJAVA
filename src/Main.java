@@ -28,10 +28,18 @@ public class Main {
             for (Pessoa pessoa : ladoDireito) {
                 System.out.print(ladoDireito.indexOf(pessoa) + "º" + pessoa.getIcone() + "\n");
             }
-            System.out.println("Quem deseja colocar na jangada?");
-            int escolha = sc.nextInt();
-            jangada.add(ladoDireito.get(escolha));
-            ladoDireito.remove(escolha);
+            try{
+                System.out.println("Quem deseja colocar na jangada?");
+                int escolha = sc.nextInt();
+                if (jangada.size() == 2) {
+                    throw new JangadaCheiaException();
+                } else {
+                    jangada.add(ladoDireito.get(escolha));
+                    ladoDireito.remove(escolha);
+                }
+            }catch (JangadaCheiaException e){
+                System.out.println(e.getMessage());
+            }
         } else {
             for (Pessoa pessoa : ladoEsquerdo) {
                 System.out.print(ladoEsquerdo.indexOf(pessoa) + "º" + pessoa.getIcone() + "\n");
@@ -46,6 +54,7 @@ public class Main {
     public static void jogo() {
         int opcao = 0;
         do {
+            verificarLados();
             verificarVitoria();
             if (!lado) {
                 System.out.println("Atravessando para o lado direita...");
@@ -62,16 +71,32 @@ public class Main {
                             System.out.print(jangada.indexOf(pessoa) + "º" + pessoa.getIcone() + "\n");
                         }
                         int escolha = sc.nextInt();
-                        ladoDireito.add(jangada.get(escolha));
-                        jangada.remove(escolha);
+                        try {
+                            if (jangada.size() == 0) {
+                                throw new SemCondutorException();
+                            } else {
+                                ladoDireito.add(jangada.get(escolha));
+                                jangada.remove(escolha);
+                            }
+                        } catch (SemCondutorException e) {
+                            System.out.println(e.getMessage());
+                        }
                         break;
                     case 2:
                         colocarNaJangada();
                         break;
                     case 3:
-                        if (jangada.size() == 0) {
-                            System.out.println("Você não atravessar sem nenhum condutor!");
+                        try {
+                            if (jangada.size() == 0) {
+                                throw new SemCondutorException();
+                            } else {
+                                System.out.println("Voltando...");
+                                lado = true;
+                            }
+                        } catch (SemCondutorException e) {
+                            System.out.println(e.getMessage());
                         }
+
                         System.out.println("Voltando...");
                         lado = true;
                         break;
@@ -90,19 +115,28 @@ public class Main {
                         for (Pessoa pessoa : jangada) {
                             System.out.print(jangada.indexOf(pessoa) + "º" + pessoa.getIcone() + "\n");
                         }
-                        int escolha = sc.nextInt();
-                        ladoEsquerdo.add(jangada.get(escolha));
-                        jangada.remove(escolha);
+                        try {
+                            int escolha = sc.nextInt();
+                            ladoEsquerdo.add(jangada.get(escolha));
+                            jangada.remove(escolha);
+                        } catch (IndexOutOfBoundsException e) {
+                            System.out.println("Escolha um número válido!");
+                        }
                         break;
                     case 2:
                         colocarNaJangada();
                         break;
                     case 3:
-                        if (jangada.size() == 0) {
-                            System.out.println("Você não atravessar sem nenhum condutor!");
+                        try {
+                            if (jangada.size() > 0) {
+                                System.out.println("Voltando...");
+                                lado = false;
+                            } else {
+                                throw new SemCondutorException();
+                            }
+                        } catch (SemCondutorException e) {
+                            System.out.println(e.getMessage());
                         }
-                        System.out.println("Voltando...");
-                        lado = false;
                         break;
                 }
             }
@@ -127,6 +161,33 @@ public class Main {
     public static void verificarVitoria() {
         if (ladoEsquerdo.size() == 6) {
             System.out.println("Parabéns, você venceu!");
+            System.exit(0);
+        }
+    }
+
+    public static void verificarLados() {
+        int quantidadeCanibal = 0;
+        int quantidadeMissionario = 0;
+        if (lado) {
+            for (Pessoa pessoa : ladoDireito) {
+                if (pessoa instanceof Canibal) {
+                    quantidadeCanibal++;
+                } else if (pessoa instanceof Missionario) {
+                    quantidadeMissionario++;
+                }
+            }
+        } else {
+            for (Pessoa pessoa : ladoEsquerdo) {
+                if (pessoa instanceof Canibal) {
+                    quantidadeCanibal++;
+                } else if (pessoa instanceof Missionario) {
+                    quantidadeMissionario++;
+                }
+            }
+        }
+
+        if (quantidadeCanibal > quantidadeMissionario) {
+            System.out.println("Você perdeu!");
             System.exit(0);
         }
     }
